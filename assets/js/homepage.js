@@ -3,27 +3,8 @@ let nameInputElement = document.querySelector("#username");
 let repoContainerElement = document.querySelector("#repos-container");
 let repoSearchTerm = document.querySelector("#repo-search-term");
 
-let getUserRepos = function(user) {
-  // format the github api url
-  let apiUrl = "https://api.github.com/users/" + user + "/repos";
-
-  // make a request to the url
-  fetch(apiUrl).then(function(response) {
-    if (response.ok) {
-      // request was successful
-      response.json().then(function(data) {
-        displayRepos(data, user);
-      });
-    } else {
-      alert("Error: GitHub User Not Found");
-    }
-  }).catch(function(error) {
-    // notice this `.catch()` getting chained onto the end of the `.then()` method
-    alert("Unable to connect to GitHub");
-  });
-};
-
 let formSubmitHandler = function(event) {
+  // prevent page from refreshing
   event.preventDefault();
 
   // get value from input element
@@ -31,14 +12,37 @@ let formSubmitHandler = function(event) {
 
   if (username) {
     getUserRepos(username);
+
+    // clear old content
+    repoContainerElement.textContent = "";
     nameInputElement.value = "";
   } else {
     alert("Please enter a GitHub username");
   }
-  console.log(event);
 };
 
-userFormElement.addEventListener("submit", formSubmitHandler);
+let getUserRepos = function(user) {
+  // format the github api url
+  let apiUrl = "https://api.github.com/users/" + user + "/repos";
+
+  // make a request to the url
+  fetch(apiUrl)
+    .then(function(response) {
+      // request was successful
+      if (response.ok) {
+        console.log(response);
+        response.json().then(function(data) {
+          console.log(data);
+          displayRepos(data, user);
+        });
+      } else {
+        alert("Error: " + response.statusText);
+      }
+    }).catch(function(error) {
+      alert("Unable to connect to GitHub");
+    });
+};
+
 
 let displayRepos = function(repos, searchTerm) {
   // check if api returned any repos
@@ -47,8 +51,6 @@ let displayRepos = function(repos, searchTerm) {
     return;
   }
 
-  // clear old content
-  repoContainerElement.textContent = "";
   repoSearchTerm.textContent = searchTerm;
 
   // loop over repos
@@ -85,3 +87,6 @@ let displayRepos = function(repos, searchTerm) {
     repoContainerElement.appendChild(repoElement);
   }
 };
+
+// add event listener to forms
+userFormElement.addEventListener("submit", formSubmitHandler);
